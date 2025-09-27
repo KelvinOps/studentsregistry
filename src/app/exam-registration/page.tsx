@@ -129,7 +129,7 @@ export default function ExamRegistration() {
       queryClient.invalidateQueries({ queryKey: ["exam-registrations", "me"] });
       queryClient.invalidateQueries({ queryKey: ["exams"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -175,7 +175,7 @@ export default function ExamRegistration() {
       queryClient.invalidateQueries({ queryKey: ["exam-registrations", "me"] });
       queryClient.invalidateQueries({ queryKey: ["exams"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",

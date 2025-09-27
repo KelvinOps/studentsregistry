@@ -19,15 +19,74 @@ import {
   Upload
 } from "lucide-react";
 
+// Type definitions
+interface AuthUser {
+  id: string;
+  role: 'ADMIN' | 'STAFF' | 'STUDENT' | 'SUPER_ADMIN';
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
+interface ToastProps {
+  title: string;
+  description: string;
+  variant?: 'default' | 'destructive';
+}
+
+interface Student {
+  id: string;
+  studentName: string;
+  email: string;
+  studentNo: string;
+  departmentId: string;
+  studentType: 'KUCCPS' | 'SELF_SPONSORED';
+  createdAt: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface HolidayReport {
+  id: string;
+  studentId: string;
+  holidayType: string;
+  priorityLevel: 'Normal' | 'Urgent' | 'Emergency';
+  startDate: string;
+  expectedReturnDate: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  submittedAt: string;
+}
+
+interface ColumnDefinition<T> {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  render?: (value: unknown, row: T) => React.ReactNode;
+}
+
 // Mock hook implementations - replace with actual implementations
-const useAuth = () => ({
-  user: { id: '1', role: 'ADMIN', firstName: 'Admin', lastName: 'User' },
+const useAuth = (): { 
+  user: AuthUser | null; 
+  isAuthenticated: boolean; 
+  isLoading: boolean;
+} => ({
+  user: { 
+    id: '1', 
+    role: 'ADMIN', 
+    firstName: 'Admin', 
+    lastName: 'User',
+    email: 'admin@example.com'
+  },
   isAuthenticated: true,
   isLoading: false
 });
 
 const useToast = () => ({
-  toast: ({ title, description, variant }: any) => {
+  toast: ({ title, description }: ToastProps) => {
     console.log(`Toast: ${title} - ${description}`);
   }
 });
@@ -40,7 +99,7 @@ const mockStats = {
   departmentCount: 12
 };
 
-const mockStudents = [
+const mockStudents: Student[] = [
   {
     id: '1',
     studentName: 'John Doe',
@@ -61,12 +120,12 @@ const mockStudents = [
   }
 ];
 
-const mockDepartments = [
+const mockDepartments: Department[] = [
   { id: 'dept1', name: 'Computer Science', description: 'CS Department' },
   { id: 'dept2', name: 'Engineering', description: 'Engineering Department' }
 ];
 
-const mockHolidayReports = [
+const mockHolidayReports: HolidayReport[] = [
   {
     id: '1',
     studentId: '1',
@@ -120,6 +179,13 @@ export default function AdminPanel() {
     <div className={className}>{children}</div>
   );
 
+  interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    children: React.ReactNode;
+    variant?: 'default' | 'ghost' | 'outline' | 'link';
+    size?: 'default' | 'sm' | 'lg';
+    className?: string;
+  }
+
   const Button = ({ 
     children, 
     variant = "default", 
@@ -127,14 +193,7 @@ export default function AdminPanel() {
     className = "",
     onClick,
     ...props 
-  }: { 
-    children: React.ReactNode; 
-    variant?: string; 
-    size?: string; 
-    className?: string;
-    onClick?: () => void;
-    [key: string]: any;
-  }) => {
+  }: ButtonProps) => {
     const baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background";
     
     const variantClasses = {
@@ -152,7 +211,7 @@ export default function AdminPanel() {
 
     return (
       <button 
-        className={`${baseClasses} ${variantClasses[variant as keyof typeof variantClasses] || variantClasses.default} ${sizeClasses[size as keyof typeof sizeClasses] || sizeClasses.default} ${className}`}
+        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         onClick={onClick}
         {...props}
       >
@@ -161,7 +220,7 @@ export default function AdminPanel() {
     );
   };
 
-  const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: string }) => {
+  const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: 'default' | 'secondary' | 'destructive' | 'outline' }) => {
     const variantClasses = {
       default: "bg-primary text-primary-foreground",
       secondary: "bg-secondary text-secondary-foreground",
@@ -170,7 +229,7 @@ export default function AdminPanel() {
     };
 
     return (
-      <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variantClasses[variant as keyof typeof variantClasses] || variantClasses.default}`}>
+      <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variantClasses[variant]}`}>
         {children}
       </div>
     );
@@ -188,16 +247,12 @@ export default function AdminPanel() {
     </div>
   );
 
-  const DataTable = ({ 
+  const DataTable = <T,>({ 
     data, 
-    columns, 
-    searchPlaceholder,
-    ...props 
+    columns
   }: { 
-    data: any[]; 
-    columns: any[]; 
-    searchPlaceholder: string;
-    [key: string]: any;
+    data: T[]; 
+    columns: ColumnDefinition<T>[];
   }) => (
     <div className="rounded-md border">
       <table className="w-full caption-bottom text-sm">
@@ -215,7 +270,7 @@ export default function AdminPanel() {
             <tr key={index} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
               {columns.map((column) => (
                 <td key={column.key} className="p-4 align-middle">
-                  {column.render ? column.render(row[column.key], row) : row[column.key]}
+                  {column.render ? column.render((row as Record<string, unknown>)[column.key], row) : String((row as Record<string, unknown>)[column.key] ?? '')}
                 </td>
               ))}
             </tr>
@@ -225,11 +280,11 @@ export default function AdminPanel() {
     </div>
   );
 
-  const studentColumns = [
+  const studentColumns: ColumnDefinition<Student>[] = [
     {
       key: "avatar",
       label: "",
-      render: (_: any, row: any) => (
+      render: (_value: unknown, row: Student) => (
         <Avatar className="h-8 w-8">
           <AvatarFallback className="bg-blue-600 text-white text-xs">
             {row.studentName?.substring(0, 2)?.toUpperCase() || "??"}
@@ -241,9 +296,9 @@ export default function AdminPanel() {
       key: "studentName",
       label: "Student",
       sortable: true,
-      render: (value: any, row: any) => (
+      render: (value: unknown, row: Student) => (
         <div>
-          <p className="font-medium text-gray-900 dark:text-white">{value}</p>
+          <p className="font-medium text-gray-900 dark:text-white">{String(value)}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">{row.email}</p>
         </div>
       )
@@ -256,7 +311,7 @@ export default function AdminPanel() {
     {
       key: "departmentId",
       label: "Department",
-      render: (value: any) => {
+      render: (value: unknown) => {
         const dept = mockDepartments.find(d => d.id === value);
         return dept?.name || "Unknown";
       }
@@ -264,9 +319,9 @@ export default function AdminPanel() {
     {
       key: "studentType",
       label: "Type",
-      render: (value: any) => (
+      render: (value: unknown) => (
         <Badge variant={value === 'KUCCPS' ? 'default' : 'secondary'}>
-          {value}
+          {String(value)}
         </Badge>
       )
     },
@@ -274,12 +329,12 @@ export default function AdminPanel() {
       key: "createdAt",
       label: "Registered",
       sortable: true,
-      render: (value: any) => new Date(value).toLocaleDateString()
+      render: (value: unknown) => new Date(String(value)).toLocaleDateString()
     },
     {
       key: "actions",
       label: "Actions",
-      render: (_: any, row: any) => (
+      render: () => (
         <div className="flex space-x-2">
           <Button variant="ghost" size="sm">
             <Eye className="h-4 w-4" />
@@ -292,11 +347,11 @@ export default function AdminPanel() {
     }
   ];
 
-  const holidayReportColumns = [
+  const holidayReportColumns: ColumnDefinition<HolidayReport>[] = [
     {
       key: "studentId",
       label: "Student",
-      render: (value: any) => {
+      render: (value: unknown) => {
         const student = mockStudents.find(s => s.id === value);
         return student?.studentName || "Unknown";
       }
@@ -309,12 +364,12 @@ export default function AdminPanel() {
     {
       key: "priorityLevel",
       label: "Priority",
-      render: (value: any) => (
+      render: (value: unknown) => (
         <Badge variant={
           value === 'Emergency' ? 'destructive' : 
           value === 'Urgent' ? 'secondary' : 'outline'
         }>
-          {value}
+          {String(value)}
         </Badge>
       )
     },
@@ -322,23 +377,23 @@ export default function AdminPanel() {
       key: "startDate",
       label: "Start Date",
       sortable: true,
-      render: (value: any) => new Date(value).toLocaleDateString()
+      render: (value: unknown) => new Date(String(value)).toLocaleDateString()
     },
     {
       key: "expectedReturnDate",
       label: "Return Date",
       sortable: true,
-      render: (value: any) => new Date(value).toLocaleDateString()
+      render: (value: unknown) => new Date(String(value)).toLocaleDateString()
     },
     {
       key: "status",
       label: "Status",
-      render: (value: any) => (
+      render: (value: unknown) => (
         <Badge variant={
           value === 'APPROVED' ? 'default' : 
           value === 'REJECTED' ? 'destructive' : 'secondary'
         }>
-          {value}
+          {String(value)}
         </Badge>
       )
     },
@@ -346,7 +401,7 @@ export default function AdminPanel() {
       key: "submittedAt",
       label: "Submitted",
       sortable: true,
-      render: (value: any) => new Date(value).toLocaleDateString()
+      render: (value: unknown) => new Date(String(value)).toLocaleDateString()
     }
   ];
 
@@ -527,7 +582,6 @@ export default function AdminPanel() {
               <DataTable
                 data={mockStudents}
                 columns={studentColumns}
-                searchPlaceholder="Search students..."
               />
             </CardContent>
           </Card>
@@ -547,7 +601,6 @@ export default function AdminPanel() {
               <DataTable
                 data={mockHolidayReports}
                 columns={holidayReportColumns}
-                searchPlaceholder="Search reports..."
               />
             </CardContent>
           </Card>

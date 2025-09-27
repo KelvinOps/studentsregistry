@@ -7,6 +7,32 @@ export type RegistrationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 export type HolidayStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type PriorityLevel = 'Normal' | 'Urgent' | 'Emergency';
 
+// Document types for file uploads
+export interface DocumentFile {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+  uploadedAt: Date;
+}
+
+export interface StudentDocuments {
+  birthCertificate?: DocumentFile;
+  kcpeCertificate?: DocumentFile;
+  kcseCertificate?: DocumentFile;
+  transcripts?: DocumentFile[];
+  passportPhoto?: DocumentFile;
+  other?: DocumentFile[];
+}
+
+export interface SupportingDocuments {
+  medicalDocuments?: DocumentFile[];
+  travelDocuments?: DocumentFile[];
+  parentalConsent?: DocumentFile;
+  other?: DocumentFile[];
+}
+
 export interface User {
   id: string;
   email: string | null;
@@ -55,7 +81,7 @@ export interface Student {
   kcpeIndex: string | null;
   kcseIndex: string | null;
   previousInstitution: string | null;
-  documents: any | null;
+  documents: StudentDocuments | null;
   createdAt: Date | null;
   updatedAt: Date | null;
 }
@@ -100,7 +126,7 @@ export interface HolidayReport {
   reason: string;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
-  supportingDocuments: any | null;
+  supportingDocuments: SupportingDocuments | null;
   status: HolidayStatus | null;
   submittedAt: Date | null;
   reviewedAt: Date | null;
@@ -128,7 +154,7 @@ export interface InsertStudent {
   kcpeIndex?: string;
   kcseIndex?: string;
   previousInstitution?: string;
-  documents?: any;
+  documents?: StudentDocuments;
 }
 
 export interface InsertDepartment {
@@ -177,7 +203,7 @@ export interface InsertHolidayReport {
   reason: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
-  supportingDocuments?: any;
+  supportingDocuments?: SupportingDocuments;
   status?: HolidayStatus;
   reviewedBy?: string;
 }

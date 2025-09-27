@@ -1,4 +1,4 @@
-// shared/schema.ts - Fixed schema with proper Zod validation
+// shared/schema.ts
 import { z } from 'zod';
 
 // Enums
@@ -111,7 +111,7 @@ export const HolidayReportSchema = z.object({
   submittedAt: z.date().nullable(),
   reviewedAt: z.date().nullable(),
   reviewedBy: z.string().cuid().nullable(),
-  reviewComments: z.string().nullable(), // Fixed: was reviewNotes, should be reviewComments
+  reviewNotes: z.string().nullable(), // Fixed: was reviewNotes, should be reviewComments
 });
 
 // Form validation schemas - THESE WERE THE PROBLEMATIC ONES

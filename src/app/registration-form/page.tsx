@@ -25,6 +25,27 @@ interface Session {
   name: string;
 }
 
+interface RegistrationData {
+  studentName: string;
+  birthDate: string;
+  gender: string;
+  nationality: string;
+  phoneNumber: string;
+  email: string;
+  county: string;
+  subCounty: string;
+  birthCertNo: string;
+  studentType: string;
+  departmentId: string;
+  programme: string;
+  class: string;
+  session: string;
+  kcpeIndex?: string;
+  kcseIndex?: string;
+  previousInstitution?: string;
+  documents?: Record<string, File>;
+}
+
 // Validation schemas with improved error handling
 const personalInfoSchema = z.object({
   studentName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -206,8 +227,7 @@ function FileUpload({
 // Multi-step form component with better navigation
 function MultiStepForm({ 
   steps, 
-  currentStep, 
-  onStepChange 
+  currentStep 
 }: {
   steps: Array<{
     title: string;
@@ -216,7 +236,6 @@ function MultiStepForm({
     component: React.ReactNode;
   }>;
   currentStep: number;
-  onStepChange: (step: number) => void;
 }) {
   return (
     <div className="space-y-8">
@@ -325,21 +344,24 @@ export default function RegistrationForm() {
   });
 
   const createStudentMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: RegistrationData) => {
       const formData = new FormData();
       
       // Append basic data
       Object.keys(data).forEach(key => {
-        if (key !== 'documents' && data[key] !== undefined) {
-          formData.append(key, data[key]);
+        if (key !== 'documents' && data[key as keyof RegistrationData] !== undefined) {
+          const value = data[key as keyof RegistrationData];
+          if (typeof value === 'string') {
+            formData.append(key, value);
+          }
         }
       });
       
       // Append documents
       if (data.documents) {
         Object.keys(data.documents).forEach(key => {
-          if (data.documents[key] instanceof File) {
-            formData.append(key, data.documents[key]);
+          if (data.documents![key] instanceof File) {
+            formData.append(key, data.documents![key]);
           }
         });
       }
@@ -382,7 +404,7 @@ export default function RegistrationForm() {
       return;
     }
 
-    const combinedData = {
+    const combinedData: RegistrationData = {
       ...personalData,
       ...academicData,
       birthDate: new Date(personalData.birthDate).toISOString(),
@@ -880,7 +902,6 @@ export default function RegistrationForm() {
         <MultiStepForm 
           steps={steps}
           currentStep={currentStep}
-          onStepChange={setCurrentStep}
         />
       </div>
     </div>

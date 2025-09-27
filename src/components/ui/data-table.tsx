@@ -12,28 +12,31 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
-interface Column {
+// Generic type for table row data
+type TableRowData = Record<string, unknown>;
+
+interface Column<T = TableRowData> {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: unknown, row: T) => React.ReactNode;
 }
 
-interface DataTableProps {
-  data: any[];
-  columns: Column[];
+interface DataTableProps<T = TableRowData> {
+  data: T[];
+  columns: Column<T>[];
   searchable?: boolean;
   searchPlaceholder?: string;
   filterable?: boolean;
   filterOptions?: { key: string; label: string; options: { value: string; label: string }[] }[];
   pagination?: boolean;
   pageSize?: number;
-  onRowClick?: (row: any) => void;
+  onRowClick?: (row: T) => void;
   className?: string;
   "data-testid"?: string;
 }
 
-export default function DataTable({
+export default function DataTable<T extends TableRowData = TableRowData>({
   data,
   columns,
   searchable = true,
@@ -45,7 +48,7 @@ export default function DataTable({
   onRowClick,
   className = "",
   "data-testid": testId,
-}: DataTableProps) {
+}: DataTableProps<T>) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortField, setSortField] = useState<string | null>(null);
@@ -53,7 +56,7 @@ export default function DataTable({
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filter data
-  let filteredData = data.filter((row) => {
+  const filteredData = data.filter((row) => {
     // Search filter
     if (searchQuery) {
       const searchableText = columns
@@ -76,25 +79,34 @@ export default function DataTable({
   });
 
   // Sort data
-  if (sortField) {
-    filteredData.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      
-      let comparison = 0;
-      if (aValue > bValue) comparison = 1;
-      if (aValue < bValue) comparison = -1;
-      
-      return sortDirection === "desc" ? -comparison : comparison;
-    });
-  }
+  const sortedData = sortField 
+    ? [...filteredData].sort((a, b) => {
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+        
+        // Handle null/undefined values
+        if (aValue == null && bValue == null) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+        
+        // Convert to strings for comparison to handle mixed types safely
+        const aStr = String(aValue);
+        const bStr = String(bValue);
+        
+        let comparison = 0;
+        if (aStr > bStr) comparison = 1;
+        if (aStr < bStr) comparison = -1;
+        
+        return sortDirection === "desc" ? -comparison : comparison;
+      })
+    : filteredData;
 
   // Pagination
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const totalPages = Math.ceil(sortedData.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedData = pagination 
-    ? filteredData.slice(startIndex, startIndex + pageSize)
-    : filteredData;
+    ? sortedData.slice(startIndex, startIndex + pageSize)
+    : sortedData;
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -217,7 +229,7 @@ export default function DataTable({
       {pagination && totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(startIndex + pageSize, filteredData.length)} of {filteredData.length} results
+            Showing {startIndex + 1} to {Math.min(startIndex + pageSize, sortedData.length)} of {sortedData.length} results
           </div>
           <div className="flex items-center space-x-2">
             <Button

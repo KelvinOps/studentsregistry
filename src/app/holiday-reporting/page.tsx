@@ -19,11 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import Navigation from "@/components/navigation";
 import type { 
   Student, 
-  HolidayReport,
   HolidayReportWithRelations 
 } from "../../../shared/schema";
 import { 
@@ -31,7 +29,6 @@ import {
   MapPin,
   Clock,
   FileText,
-  CheckCircle,
   Edit,
   Trash2,
   Plus,
@@ -63,12 +60,8 @@ const formatDateTime = (date: Date | string | null) => {
 const holidayReportSchema = z.object({
   holidayType: z.string().min(1, "Holiday type is required"),
   priorityLevel: z.enum(["Normal", "Urgent", "Emergency"]),
-  startDate: z.date({
-    required_error: "Start date is required",
-  }),
-  expectedReturnDate: z.date({
-    required_error: "Expected return date is required",
-  }),
+  startDate: z.date(),
+  expectedReturnDate: z.date(),
   destination: z.string().min(1, "Destination is required"),
   reason: z.string().min(10, "Reason must be at least 10 characters"),
   emergencyContactName: z.string().optional(),
@@ -150,7 +143,7 @@ export default function HolidayReporting() {
   });
 
   // Submit holiday report mutation
-  const submitReportMutation = useMutation({
+  const submitReportMutation = useMutation<unknown, Error, HolidayReportFormData>({
     mutationFn: async (data: HolidayReportFormData) => {
       const endpoint = editingReport 
         ? `/api/holiday-reports/${editingReport}` 
@@ -185,7 +178,7 @@ export default function HolidayReporting() {
       setEditingReport(null);
       form.reset();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -217,7 +210,7 @@ export default function HolidayReporting() {
       });
       queryClient.invalidateQueries({ queryKey: ["holiday-reports"] });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Delete Failed",
         description: "Failed to delete holiday report. Please try again.",
@@ -688,10 +681,10 @@ export default function HolidayReporting() {
                             </span>
                           )}
                         </div>
-                        {report.reviewNotes && (
+                        {(report as { reviewNotes?: string }).reviewNotes && (
                           <div className="mt-2">
                             <p className="text-sm text-muted-foreground mb-1">Review Comments:</p>
-                            <p className="text-sm italic">{report.reviewNotes}</p>
+                            <p className="text-sm italic">{(report as { reviewNotes?: string }).reviewNotes}</p>
                           </div>
                         )}
                       </div>

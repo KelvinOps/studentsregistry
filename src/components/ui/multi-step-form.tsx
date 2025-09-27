@@ -13,9 +13,21 @@ interface MultiStepFormProps {
   steps: Step[];
   currentStep: number;
   onStepChange: (step: number) => void;
+  allowClickNavigation?: boolean;
 }
 
-export default function MultiStepForm({ steps, currentStep, onStepChange }: MultiStepFormProps) {
+export default function MultiStepForm({ 
+  steps, 
+  currentStep, 
+  onStepChange, 
+  allowClickNavigation = false 
+}: MultiStepFormProps) {
+  const handleStepClick = (index: number) => {
+    if (allowClickNavigation && (index <= currentStep || index < currentStep)) {
+      onStepChange(index);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Step Indicator */}
@@ -30,8 +42,13 @@ export default function MultiStepForm({ steps, currentStep, onStepChange }: Mult
                     : index === currentStep 
                     ? 'bg-primary text-primary-foreground' 
                     : 'bg-muted text-muted-foreground'
+                } ${
+                  allowClickNavigation && (index <= currentStep) 
+                    ? 'cursor-pointer hover:opacity-80' 
+                    : ''
                 }`}
                 data-testid={`step-indicator-${index}`}
+                onClick={() => handleStepClick(index)}
               >
                 {index < currentStep ? (
                   <Check className="h-5 w-5" />
@@ -46,7 +63,12 @@ export default function MultiStepForm({ steps, currentStep, onStepChange }: Mult
                     : index < currentStep 
                     ? 'text-foreground' 
                     : 'text-muted-foreground'
+                } ${
+                  allowClickNavigation && (index <= currentStep) 
+                    ? 'cursor-pointer hover:opacity-80' 
+                    : ''
                 }`}
+                onClick={() => handleStepClick(index)}
               >
                 {step.title}
               </span>
