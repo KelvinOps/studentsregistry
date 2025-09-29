@@ -321,7 +321,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               
-              <Link href="/api/login">
+              <Link href="login">
                 <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-blue-600">
                   Admin Login
                 </Button>
