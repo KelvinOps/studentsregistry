@@ -1,3 +1,4 @@
+// lib/queryClient.ts
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
@@ -10,12 +11,36 @@ async function throwIfResNotOk(res: Response) {
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
+  options: RequestInit = {}
 ): Promise<Response> {
+  // Get current user from localStorage
+  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
+  
+  // Create headers object with proper typing
+  const headers: Record<string, string> = {};
+  
+  // Merge existing headers
+  if (options.headers) {
+    const existingHeaders = new Headers(options.headers);
+    existingHeaders.forEach((value, key) => {
+      headers[key] = value;
+    });
+  }
+
+  // Add user data to headers if available
+  if (storedUser) {
+    headers['x-user-data'] = storedUser;
+  }
+
+  // Add Content-Type for requests with body
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    ...options,
+    headers,
     credentials: "include",
   });
 
@@ -29,8 +54,19 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Get current user from localStorage
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
+    
+    const headers: Record<string, string> = {};
+
+    // Add user data to headers if available
+    if (storedUser) {
+      headers['x-user-data'] = storedUser;
+    }
+
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
+      headers,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

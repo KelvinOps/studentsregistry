@@ -1,4 +1,4 @@
-// app/api/exam-registrations/me/route.ts
+// app/api/exam-registrations/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 // Type definitions
