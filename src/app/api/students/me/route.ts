@@ -1,5 +1,5 @@
 // ============================================
-// 3. app/api/students/me/route.ts (NEW FILE)
+// 3. app/api/students/me/route.ts 
 // ============================================
 import { NextRequest, NextResponse } from "next/server";
 

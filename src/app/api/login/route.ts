@@ -126,7 +126,6 @@ const mockUsers: User[] = [
     studentId: "STU008",
     department: "Computer Science",
   },
-  
 ];
 
 export async function POST(request: NextRequest) {
@@ -170,13 +169,26 @@ export async function POST(request: NextRequest) {
         }
       : baseResponse;
 
-    return NextResponse.json(
+    // Create response with cookie
+    const response = NextResponse.json(
       {
         message: "Login successful",
         user: userResponse,
       },
       { status: 200 }
     );
+
+    // Set cookie for authentication
+    const cookieValue = encodeURIComponent(JSON.stringify(userResponse));
+    response.cookies.set('currentUser', cookieValue, {
+      httpOnly: false, // Allow client-side access
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 86400, // 24 hours
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

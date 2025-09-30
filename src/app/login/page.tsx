@@ -4,6 +4,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
+import { setCurrentUser } from "@/lib/authUtils";
 
 // Separate component for the login form that uses useSearchParams
 function LoginForm() {
@@ -37,26 +38,28 @@ function LoginForm() {
 
       const data = await response.json();
 
-      // Store user in localStorage (only on client side)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
-      }
+      // Store user using auth utility
+      setCurrentUser(data.user);
 
-      // Force a small delay to ensure localStorage is written
+      // Force a small delay to ensure storage is written
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Redirect based on redirect parameter or user role
       if (redirectTo) {
-        // Decode the redirect URL
         const decodedRedirect = decodeURIComponent(redirectTo);
         console.log('Redirecting to:', decodedRedirect);
         router.push(decodedRedirect);
+        // Force reload to ensure middleware picks up the cookie
+        router.refresh();
       } else if (data.user.role === "ADMIN" || data.user.role === "STAFF") {
         router.push("/admin-panel");
+        router.refresh();
       } else if (data.user.role === "STUDENT") {
         router.push("/student-dashboard");
+        router.refresh();
       } else {
         router.push("/");
+        router.refresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -193,6 +196,17 @@ function LoginForm() {
               )}
             </button>
           </form>
+
+          {/* Test Credentials */}
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-xs font-medium text-blue-900 dark:text-blue-300 mb-2">Test Credentials:</p>
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              Student: wanjiku.kamau@student.ac.ke / student123
+            </p>
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              Admin: admin@example.com / admin123
+            </p>
+          </div>
 
           {/* Registration Link */}
           <div className="mt-6 text-center">
