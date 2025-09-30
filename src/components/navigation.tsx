@@ -7,17 +7,29 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Navigation() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refetch } = useAuth();
 
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('authToken');
+    }
+    
+    // Invalidate the auth query to update UI
+    refetch();
+    
+    // Redirect to home page
+    router.push('/');
   };
 
   const handleLogoClick = () => {
     if (user?.role === "ADMIN" || user?.role === "STAFF") {
-      router.push("/admin");
+      router.push("/admin-panel");
+    } else if (user?.role === "STUDENT") {
+      router.push("/student-dashboard");
     } else {
-      router.push("/dashboard");
+      router.push("/");
     }
   };
 
@@ -41,7 +53,7 @@ export default function Navigation() {
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            {isAuthenticated && user && (
+            {isAuthenticated && user ? (
               <>
                 <div className="text-sm text-muted-foreground">
                   Welcome,{" "}
@@ -60,6 +72,20 @@ export default function Navigation() {
                   Sign Out
                 </Button>
               </>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/login')}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  onClick={() => router.push('/registration-form')}
+                >
+                  Register
+                </Button>
+              </div>
             )}
           </div>
         </div>

@@ -108,7 +108,7 @@ const mockUsers: User[] = [
   },
   {
     id: "9",
-    email: "wairimu.githinji@student.ac.ke",
+    email: "daniel.wandera@student.ac.ke",
     password: "student123",
     role: "STUDENT",
     firstName: "Wairimu",
@@ -118,7 +118,7 @@ const mockUsers: User[] = [
   },
   {
     id: "10",
-    email: "kibet.rotich@student.ac.ke",
+    email: "simon.sifuna@student.ac.ke",
     password: "student123",
     role: "STUDENT",
     firstName: "Kibet",
@@ -126,6 +126,7 @@ const mockUsers: User[] = [
     studentId: "STU008",
     department: "Computer Science",
   },
+  
 ];
 
 export async function POST(request: NextRequest) {
