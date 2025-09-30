@@ -1,3 +1,5 @@
+//app/exam-registration/page.tsx
+// 
 "use client";
 
 import { useState, useEffect } from "react";
@@ -47,7 +49,7 @@ export default function ExamRegistration() {
   const { data: student } = useQuery<Student | null>({
     queryKey: ["students", "me"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/students/me");
+      const response = await apiRequest("GET", "/students/me");
       if (!response.ok) {
         throw new Error('Failed to fetch student data');
       }
@@ -137,7 +139,7 @@ export default function ExamRegistration() {
           variant: "destructive",
         });
         setTimeout(() => {
-          router.push("/api/login");
+          router.push("/login");
         }, 500);
         return;
       }
