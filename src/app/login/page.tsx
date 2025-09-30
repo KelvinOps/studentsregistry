@@ -1,11 +1,12 @@
 // app/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
 
-export default function LoginPage() {
+// Separate component for the login form that uses useSearchParams
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,8 +37,10 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      // Store user in localStorage
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      // Store user in localStorage (only on client side)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+      }
 
       // Force a small delay to ensure localStorage is written
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -205,12 +208,32 @@ export default function LoginPage() {
           </div>
         </div>
 
-
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
           <p>© 2025 Student Registry. All rights reserved.</p>
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function LoginLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main page component
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginForm />
+    </Suspense>
   );
 }
