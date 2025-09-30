@@ -269,7 +269,7 @@ export default function ExamRegistration() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-foreground">Exam Registration</h1>
             <div className="text-sm text-muted-foreground">
-              Registration Deadline: <span className="text-destructive font-medium">Dec 10, 2024</span>
+              Registration Deadline: <span className="text-destructive font-medium">Dec 10, 2025</span>
             </div>
           </div>
         </div>
