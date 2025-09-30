@@ -2,21 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
-
-interface ToastProps {
-  title: string;
-  description: string;
-  variant?: 'default' | 'destructive';
-}
-
-// Mock hook - replace with actual implementation
-const useToast = () => ({
-  toast: ({ title, description, variant }: ToastProps) => {
-    console.log(`Toast [${variant}]: ${title} - ${description}`);
-  }
-});
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,7 +12,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +21,6 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Replace with actual API call
       const response = await fetch("/api/login", {
         method: "POST",
         headers: {
@@ -49,26 +36,27 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      toast({
-        title: "Success",
-        description: "Logged in successfully!",
-      });
+      // Store user in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-      // Redirect based on user role
-      if (data.user.role === "ADMIN" || data.user.role === "STAFF") {
+      // Force a small delay to ensure localStorage is written
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Redirect based on redirect parameter or user role
+      if (redirectTo) {
+        // Decode the redirect URL
+        const decodedRedirect = decodeURIComponent(redirectTo);
+        console.log('Redirecting to:', decodedRedirect);
+        router.push(decodedRedirect);
+      } else if (data.user.role === "ADMIN" || data.user.role === "STAFF") {
         router.push("/admin-panel");
       } else if (data.user.role === "STUDENT") {
         router.push("/student-dashboard");
       } else {
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Login failed",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
@@ -216,6 +204,7 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
+
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">

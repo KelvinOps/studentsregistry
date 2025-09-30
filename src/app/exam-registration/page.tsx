@@ -1,5 +1,3 @@
-//app/exam-registration/page.tsx
-// 
 "use client";
 
 import { useState, useEffect } from "react";
@@ -41,9 +39,9 @@ export default function ExamRegistration() {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
-    department: "",
-    session: "",
-    examType: ""
+    department: "all",
+    session: "all",
+    examType: "all"
   });
 
   const { data: student } = useQuery<Student | null>({
@@ -63,9 +61,9 @@ export default function ExamRegistration() {
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (searchQuery) searchParams.append('q', searchQuery);
-      if (filters.department) searchParams.append('department', filters.department);
-      if (filters.session) searchParams.append('session', filters.session);
-      if (filters.examType) searchParams.append('examType', filters.examType);
+      if (filters.department && filters.department !== 'all') searchParams.append('department', filters.department);
+      if (filters.session && filters.session !== 'all') searchParams.append('session', filters.session);
+      if (filters.examType && filters.examType !== 'all') searchParams.append('examType', filters.examType);
       
       const response = await apiRequest("GET", `/api/exams?${searchParams.toString()}`);
       if (!response.ok) {
@@ -185,7 +183,7 @@ export default function ExamRegistration() {
           variant: "destructive",
         });
         setTimeout(() => {
-          router.push("/api/login");
+          router.push("/login");
         }, 500);
         return;
       }
@@ -202,13 +200,12 @@ export default function ExamRegistration() {
     if (!isLoading && !isAuthenticated) {
       toast({
         title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        description: "Please log in to register for exams.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        router.push("/api/login");
-      }, 500);
-      return;
+      // Store the current path for redirect after login
+      const currentPath = window.location.pathname;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
     }
   }, [isAuthenticated, isLoading, toast, router]);
 
@@ -285,6 +282,7 @@ export default function ExamRegistration() {
               <div>
                 <Label htmlFor="department-filter">Department</Label>
                 <Select 
+                  value={filters.department}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, department: value }))}
                   data-testid="select-department-filter"
                 >
@@ -292,7 +290,7 @@ export default function ExamRegistration() {
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Departments</SelectItem>
+                    <SelectItem value="all">All Departments</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name}
@@ -305,6 +303,7 @@ export default function ExamRegistration() {
               <div>
                 <Label htmlFor="session-filter">Session</Label>
                 <Select 
+                  value={filters.session}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, session: value }))}
                   data-testid="select-session-filter"
                 >
@@ -312,7 +311,7 @@ export default function ExamRegistration() {
                     <SelectValue placeholder="All Sessions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Sessions</SelectItem>
+                    <SelectItem value="all">All Sessions</SelectItem>
                     {sessions.map((session) => (
                       <SelectItem key={session.id} value={session.id}>
                         {session.name}
@@ -325,6 +324,7 @@ export default function ExamRegistration() {
               <div>
                 <Label htmlFor="exam-type-filter">Exam Type</Label>
                 <Select 
+                  value={filters.examType}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, examType: value }))}
                   data-testid="select-exam-type-filter"
                 >
@@ -332,7 +332,7 @@ export default function ExamRegistration() {
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="Final">Final Exam</SelectItem>
                     <SelectItem value="Mid-term">Mid-term</SelectItem>
                     <SelectItem value="Project">Project</SelectItem>

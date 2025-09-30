@@ -187,7 +187,7 @@ export default function HolidayReporting() {
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
-        setTimeout(() => router.push("/api/login"), 500);
+        setTimeout(() => router.push("/login"), 500);
         return;
       }
       toast({
@@ -229,7 +229,7 @@ export default function HolidayReporting() {
         description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
-      setTimeout(() => router.push("/api/login"), 500);
+      setTimeout(() => router.push("/login"), 500);
       return;
     }
   }, [isAuthenticated, isLoading, toast, router]);
